@@ -41,7 +41,9 @@ jobs:
         run: cmake --build build-ci --parallel 2
 
       - name: Run client settings and unit registry tests
-        run: ctest --test-dir build-ci --output-on-failure -R '^(ClientSettings|UnitTypeRegistry)
+        run: |
+          ctest --test-dir build-ci --output-on-failure -R ClientSettings
+          ctest --test-dir build-ci --output-on-failure -R UnitTypeRegistry
 
       - name: Report replay regression prerequisites
         shell: bash
