@@ -1,0 +1,53 @@
+name: Expanded unit system CI
+
+on:
+  push:
+    branches:
+      - feature/expanded-unit-system
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: expanded-units-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  headless-build-and-tests:
+    name: Linux headless build and unit tests
+    runs-on: ubuntu-22.04
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends cmake g++ python3
+
+      - name: Configure
+        run: |
+          cmake -S . -B build-ci \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DOPENSNOWSTORM_BUILD_UI=OFF \
+            -DOPENSNOWSTORM_BUILD_BWAPI=ON
+
+      - name: Compile
+        run: cmake --build build-ci --parallel 2
+
+      - name: Run client settings test
+        run: ctest --test-dir build-ci --output-on-failure -R '^ClientSettings$'
+
+      - name: Report replay regression prerequisites
+        shell: bash
+        run: |
+          if test -d tests/replays && find tests/replays -name '*.rep' -print -quit | grep -q .; then
+            echo "Replay fixtures are present; full replay validation requires the gfxtest UI target and game data."
+          else
+            echo "No replay fixtures present; deterministic replay verification not run."
+          fi
