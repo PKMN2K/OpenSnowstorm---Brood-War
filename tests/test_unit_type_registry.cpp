@@ -39,6 +39,24 @@ int main() {
         registry.vec[vanilla_id].mineral_cost != 50)
         return fail("vanilla entry preserved");
 
+    // Registration requires contiguous IDs and cannot overwrite vanilla entries.
+    bwgame::unit_types_t loaded;
+    loaded.vec.resize(extension_id);
+    loaded.vec[vanilla_id].id = bwgame::UnitTypes::Terran_Marine;
+    loaded.vec[vanilla_id].mineral_cost = 50;
+    bwgame::unit_type_t new_unit{};
+    new_unit.mineral_cost = 125;
+    if (bwgame::append_extended_unit_type(loaded, bwgame::UnitTypes::Terran_Marine, new_unit))
+        return fail("reject existing ID");
+    if (bwgame::append_extended_unit_type(loaded, static_cast<bwgame::UnitTypes>(extension_id + 1), new_unit))
+        return fail("reject noncontiguous ID");
+    if (!bwgame::append_extended_unit_type(loaded, static_cast<bwgame::UnitTypes>(extension_id), new_unit))
+        return fail("append new ID");
+    if (loaded.vec.size() != extension_id + 1 ||
+        bwgame::find_unit_type(loaded, static_cast<bwgame::UnitTypes>(extension_id))->mineral_cost != 125)
+        return fail("registered metadata");
+    if (loaded.vec[vanilla_id].mineral_cost != 50) return fail("registration altered vanilla");
+
     std::printf("test_unit_type_registry: PASS (storage only)\n");
     return 0;
 }
