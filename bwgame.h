@@ -314,8 +314,9 @@ struct state_functions {
 	}
 
 	const unit_type_t* get_unit_type(UnitTypes id) const {
-		if ((size_t)id >= 228) error("invalid unit id %d", (size_t)id);
-		return &game_st.unit_types.vec[(size_t)id];
+		const unit_type_t* type = find_unit_type(game_st.unit_types, id);
+		if (!type) error("invalid unit id %d", (int)id);
+		return type;
 	}
 	const image_type_t* get_image_type(ImageTypes id) const {
 		if ((size_t)id >= 999) error("invalid image id %d", (size_t)id);
