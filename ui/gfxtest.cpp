@@ -4218,6 +4218,36 @@ int main(int argc, char** argv) {
 
 		if (headless) {
 			log("Headless mode active.\n");
+			// Optional integration assertion for an actual map containing a
+			// custom unit. Requires user-supplied StarCraft game data.
+			if (!ui.is_replay_mode) {
+				const char* expected_id_text = std::getenv("OPENBW_EXPECT_UNIT_ID");
+				if (expected_id_text && *expected_id_text) {
+					char* end = nullptr;
+					long expected_id = std::strtol(expected_id_text, &end, 10);
+					if (!end || *end || expected_id < 0 || expected_id > 65534) {
+						log("custom-unit smoke: FAIL (invalid OPENBW_EXPECT_UNIT_ID)\n");
+						return 2;
+					}
+					if (!bwgame::find_unit_type(ui.st.game_st.unit_types,
+							static_cast<bwgame::UnitTypes>(expected_id))) {
+						log("custom-unit smoke: FAIL (unit ID %ld not registered)\n", expected_id);
+						return 2;
+					}
+					bool found = false;
+					for (const bwgame::unit_t* unit : bwgame::ptr(ui.st.visible_units)) {
+						if (static_cast<long>(unit->unit_type->id) == expected_id && unit->sprite) found = true;
+					}
+					for (const bwgame::unit_t* unit : bwgame::ptr(ui.st.hidden_units)) {
+						if (static_cast<long>(unit->unit_type->id) == expected_id && unit->sprite) found = true;
+					}
+					if (!found) {
+						log("custom-unit smoke: FAIL (no instantiated unit with sprite for ID %ld)\n", expected_id);
+						return 2;
+					}
+					log("custom-unit smoke: PASS (instantiated ID %ld with sprite)\n", expected_id);
+				}
+			}
 			if (ui.is_replay_mode) {
 				while (!ui.is_done()) {
 					ui.replay_functions::next_frame();
