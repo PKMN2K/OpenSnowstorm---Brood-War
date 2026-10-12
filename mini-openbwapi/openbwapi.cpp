@@ -1138,6 +1138,19 @@ struct Game_impl {
 
 			vars.is_replay = false;
 
+			// Opt-in smoke-test spawn of a new unit type next to the player's
+			// starting location. Requires OPENBW_EXTENDED_UNITS to contain ID 228.
+			// This is a development hook, not a production/build command.
+			const char* spawn_test = std::getenv("OPENBW_TEST_SPAWN_MARINE");
+			if (spawn_test && std::string(spawn_test) == "1") {
+				constexpr int test_id = 228;
+				const auto* test_type = bwgame::find_unit_type(fst.game_st.unit_types,
+					static_cast<bwgame::UnitTypes>(test_id));
+				if (!test_type) error("test Marine ID 228 missing; set OPENBW_EXTENDED_UNITS");
+				const auto pos = fst.game_st.start_locations.at(vars.local_player_id);
+				funcs.trigger_create_unit(test_type, {pos.x + 64, pos.y + 32}, vars.local_player_id);
+			}
+
 			if (st.players.at(vars.local_player_id).controller != bwgame::player_t::controller_occupied) error("%s: slot %d is not occupied (not a 2 player map?)", filename, vars.local_player_id);
 			if (st.players.at(vars.enemy_player_id).controller != bwgame::player_t::controller_occupied) error("%s: slot %d is not occupied (not a 2 player map?)", filename, vars.enemy_player_id);
 		}
