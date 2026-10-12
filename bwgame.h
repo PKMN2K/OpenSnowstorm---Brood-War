@@ -1,3 +1,4 @@
+#include "expanded_units.h"
 #ifndef BWGAME_BWGAME_H
 #define BWGAME_BWGAME_H
 
@@ -16668,6 +16669,11 @@ struct game_load_functions : state_functions {
 	// Registered after vanilla DAT loading, before cross-table pointer fixups.
 	// This does not load a mod file or expose new production buttons.
 	a_vector<unit_type_t> staged_unit_types;
+	// Specs may be parsed from a caller-provided file stream before reset().
+	a_vector<extended_unit_spec> staged_extended_unit_specs;
+	bool stage_extended_unit_file(std::istream& input) {
+		return parse_extended_unit_specs(input, staged_extended_unit_specs);
+	}
 
 	unit_type_t* get_unit_type(UnitTypes id) const {
 		const unit_type_t* type = find_unit_type(game_st.unit_types, id);
@@ -16694,6 +16700,8 @@ struct game_load_functions : state_functions {
 	void reset() {
 
 		game_st.unit_types = data_loading::load_units_dat(global_st.units_dat);
+		if (!apply_extended_unit_specs(game_st.unit_types, staged_extended_unit_specs))
+			error("invalid extended unit specifications");
 		for (auto& definition : staged_unit_types) {
 			if (!append_extended_unit_type(game_st.unit_types, definition.id, definition))
 				error("invalid or noncontiguous extended unit id %d", (int)definition.id);
