@@ -26,3 +26,19 @@ Keep vanilla DAT parsing intact. Design a separate extension layer for additiona
 - A DAT byte buffer being dynamically sized does **not** establish that all engine registries and ID types are extensible.
 - No claim of expanded-unit runtime support is made at this stage.
 - This audit is limited to an initial review of repository README and selected source headers, not a complete codebase scan or successful build.
+
+## Follow-up: concrete type-system findings (2026-10-12)
+Reviewed `data_types.h`, `game_types.h`, `bwenums.h`, and `bwgame_state.h`.
+
+- `data_types.h:20-28`: `type_container<T>` stores definitions in `a_vector<T> vec`. This is a promising dynamically sized storage layer but does not prove that lookup, initialization, or gameplay code accepts extra entries.
+- `data_types.h:30-76`: `id_type_for<unit_type_t>` maps to the `UnitTypes` enum. `type_id<T>` retains both an enum ID and a pointer. Expanding definitions requires auditing enum assumptions, pointer resolution, and sentinel handling.
+- `data_types.h:114-170`: `unit_type_t` contains `UnitTypes id`, weapon references, build costs/times, portraits, and references to flingy, orders, and other units. Custom units need consistent cross-table references.
+- `bwgame_state.h:138`: `game_state` owns `unit_types_t unit_types`.
+- `bwenums.h:10`: `UnitTypes` is declared as `enum struct UnitTypes : int`; its existing named entries are a compatibility surface, not a reason to reuse a vanilla ID.
+- `game_types.h:14-32`: `unit_id` is a live-unit *instance* identifier, with an 11-bit index and generation bits. Its 0x7ff mask is **not the unit-type count limit**. Do not conflate these two systems or modify instance IDs as a shortcut for adding unit types.
+
+### Updated implementation direction
+Start with a registry/loader audit and a test that validates additional `unit_type_t` entries can be resolved without changing vanilla enum IDs. Preserve existing enum assignments and map/replay formats. Investigate all initialization and dispatch paths before introducing the first custom unit.
+
+### Unverified
+No build or gameplay tests have run. The location of all hardcoded type-count loops, data parsing rules, UI button registration, and serialization constraints remains to be established.
