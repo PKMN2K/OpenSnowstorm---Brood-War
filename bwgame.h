@@ -1,3 +1,5 @@
+#include <cstdlib>
+#include <fstream>
 #include "expanded_units.h"
 #ifndef BWGAME_BWGAME_H
 #define BWGAME_BWGAME_H
@@ -16673,6 +16675,14 @@ struct game_load_functions : state_functions {
 	a_vector<extended_unit_spec> staged_extended_unit_specs;
 	bool stage_extended_unit_file(std::istream& input) {
 		return parse_extended_unit_specs(input, staged_extended_unit_specs);
+	}
+	// Opt-in external definitions for local test matches. Replays retain
+	// their original data unless an explicit caller supplies matching mods.
+	bool stage_extended_unit_file_from_env() {
+		const char* path = std::getenv("OPENBW_EXTENDED_UNITS");
+		if (!path || !*path) return true;
+		std::ifstream input(path);
+		return input && stage_extended_unit_file(input);
 	}
 
 	unit_type_t* get_unit_type(UnitTypes id) const {
