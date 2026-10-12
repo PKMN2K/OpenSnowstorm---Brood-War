@@ -92,14 +92,15 @@ int main() {
     original_marine.mineral_cost = 50;
     original_marine.gas_cost = 0;
     original_marine.sight_range = 7;
-    original_marine.flingy.id = static_cast<bwgame::FlingyTypes>(12);
+    original_marine.flingy = static_cast<bwgame::FlingyTypes>(12);
     if (!bwgame::apply_extended_unit_specs(marine_registry, marine_specs))
         return fail("register Marine test definition");
     const auto* duplicate = bwgame::find_unit_type(marine_registry, static_cast<bwgame::UnitTypes>(228));
     if (!duplicate || marine_registry.vec.size() != 229 ||
         duplicate->mineral_cost != 125 || duplicate->gas_cost != 0 ||
         duplicate->sight_range != marine_registry.vec[vanilla_id].sight_range ||
-        duplicate->flingy.id != marine_registry.vec[vanilla_id].flingy.id ||
+        static_cast<bwgame::FlingyTypes>(duplicate->flingy) !=
+        static_cast<bwgame::FlingyTypes>(marine_registry.vec[vanilla_id].flingy) ||
         duplicate->id == marine_registry.vec[vanilla_id].id)
         return fail("Marine test inheritance");
     if (marine_registry.vec[vanilla_id].mineral_cost != 50) return fail("vanilla Marine modified");
