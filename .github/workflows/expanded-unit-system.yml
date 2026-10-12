@@ -40,8 +40,18 @@ jobs:
       - name: Compile
         run: cmake --build build-ci --parallel 2
 
-      - name: Run client settings test
-        run: ctest --test-dir build-ci --output-on-failure -R '^ClientSettings$'
+      - name: Run client settings and unit registry tests
+        run: ctest --test-dir build-ci --output-on-failure -R '^(ClientSettings|UnitTypeRegistry)
+
+      - name: Report replay regression prerequisites
+        shell: bash
+        run: |
+          if test -d tests/replays && find tests/replays -name '*.rep' -print -quit | grep -q .; then
+            echo "Replay fixtures are present; full replay validation requires the gfxtest UI target and game data."
+          else
+            echo "No replay fixtures present; deterministic replay verification not run."
+          fi
+
 
       - name: Report replay regression prerequisites
         shell: bash
