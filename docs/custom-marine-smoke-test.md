@@ -19,3 +19,15 @@ The command exits nonzero if the expected ID is missing from the registry, no co
 **Important:** The mod definition inherits Marine's existing graphic and weapon references. It does not include or distribute any Blizzard content.
 
 The shell runner checks required files and sets `OPENBW_EXTENDED_UNITS` and `OPENBW_EXPECT_UNIT_ID=228` automatically. You can optionally provide the path to a different `gfxtest` binary as a third argument. The integration test is not executed by GitHub-hosted CI because the repository does not supply the proprietary game data or a custom-unit map.
+
+## Creating the custom map record
+
+If your UMS map already contains a Marine belonging to the chosen local player, extract `staredit/scenario.chk` from a copy of its SCX/SCM archive, then run:
+
+```bash
+python3 scripts/patch_marine_chk.py scenario.chk scenario_custom.chk --owner 0
+```
+
+The script replaces the first qualifying placed Marine (vanilla type 0) with type 228 while preserving all other CHK bytes. Repack `scenario_custom.chk` inside a copied SCX/SCM archive under `staredit/scenario.chk`, then use that map with `scripts/test_custom_marine.sh`. Do not overwrite the original map. UMS player ownership must match the selected slot.
+
+This patcher does **not** itself produce an SCX archive or execute the engine; you still need an MPQ-compatible archive editor and your own StarCraft data. It also does not verify unit movement or combat.
