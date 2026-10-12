@@ -98,11 +98,11 @@ int main() {
     const auto* duplicate = bwgame::find_unit_type(marine_registry, static_cast<bwgame::UnitTypes>(228));
     if (!duplicate || marine_registry.vec.size() != 229 ||
         duplicate->mineral_cost != 125 || duplicate->gas_cost != 0 ||
-        duplicate->sight_range != original_marine.sight_range ||
-        duplicate->flingy.id != original_marine.flingy.id ||
-        duplicate->id == original_marine.id)
+        duplicate->sight_range != marine_registry.vec[vanilla_id].sight_range ||
+        duplicate->flingy.id != marine_registry.vec[vanilla_id].flingy.id ||
+        duplicate->id == marine_registry.vec[vanilla_id].id)
         return fail("Marine test inheritance");
-    if (original_marine.mineral_cost != 50) return fail("vanilla Marine modified");
+    if (marine_registry.vec[vanilla_id].mineral_cost != 50) return fail("vanilla Marine modified");
 
     std::printf("test_unit_type_registry: PASS (storage only)\n");
     return 0;
