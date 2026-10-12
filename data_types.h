@@ -171,6 +171,15 @@ struct unit_type_t {
 
 using unit_types_t = type_container<unit_type_t>;
 
+// Resolve type IDs against the loaded registry rather than a fixed vanilla
+// unit count. Invalid and negative IDs return nullptr.
+inline const unit_type_t* find_unit_type(const unit_types_t& types, UnitTypes id) {
+    const int index = static_cast<int>(id);
+    if (index < 0 || static_cast<size_t>(index) >= types.vec.size()) return nullptr;
+    return &types.vec[static_cast<size_t>(index)];
+}
+
+
 struct weapon_type_t {
 	enum {
 		bullet_type_fly,
