@@ -1,5 +1,6 @@
 #include "expanded_units.h"
 #include <sstream>
+#include <fstream>
 
 #include <cstdio>
 
@@ -76,6 +77,32 @@ int main() {
     bwgame::a_vector<bwgame::extended_unit_spec> bad{{303, 0, 20, 0}};
     if (bwgame::apply_extended_unit_specs(external, bad))
         return fail("reject skipped ID");
+
+    // A real mod file creates ID 228 by reusing Marine's graphics, weapon,
+    // animations, orders, and movement metadata through template inheritance.
+    std::ifstream marine_file("mods/test_marine.units");
+    if (!marine_file) return fail("open Marine test definition");
+    bwgame::a_vector<bwgame::extended_unit_spec> marine_specs;
+    if (!bwgame::parse_extended_unit_specs(marine_file, marine_specs))
+        return fail("parse Marine test definition");
+    bwgame::unit_types_t marine_registry;
+    marine_registry.vec.resize(228);
+    auto& original_marine = marine_registry.vec[vanilla_id];
+    original_marine.id = bwgame::UnitTypes::Terran_Marine;
+    original_marine.mineral_cost = 50;
+    original_marine.gas_cost = 0;
+    original_marine.sight_range = 7;
+    original_marine.flingy.id = static_cast<bwgame::FlingyTypes>(12);
+    if (!bwgame::apply_extended_unit_specs(marine_registry, marine_specs))
+        return fail("register Marine test definition");
+    const auto* duplicate = bwgame::find_unit_type(marine_registry, static_cast<bwgame::UnitTypes>(228));
+    if (!duplicate || marine_registry.vec.size() != 229 ||
+        duplicate->mineral_cost != 125 || duplicate->gas_cost != 0 ||
+        duplicate->sight_range != original_marine.sight_range ||
+        duplicate->flingy.id != original_marine.flingy.id ||
+        duplicate->id == original_marine.id)
+        return fail("Marine test inheritance");
+    if (original_marine.mineral_cost != 50) return fail("vanilla Marine modified");
 
     std::printf("test_unit_type_registry: PASS (storage only)\n");
     return 0;
