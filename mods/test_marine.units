@@ -1,0 +1,3 @@
+# Test Marine: new type ID 228, inherits vanilla Terran Marine (ID 0)
+# id,template_id,mineral_cost,gas_cost
+228,0,125,0
