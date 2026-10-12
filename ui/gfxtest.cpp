@@ -4229,7 +4229,7 @@ int main(int argc, char** argv) {
 						log("custom-unit smoke: FAIL (invalid OPENBW_EXPECT_UNIT_ID)\n");
 						return 2;
 					}
-					if (!bwgame::find_unit_type(ui.st.game_st.unit_types,
+					if (!bwgame::find_unit_type(ui.st.game->unit_types,
 							static_cast<bwgame::UnitTypes>(expected_id))) {
 						log("custom-unit smoke: FAIL (unit ID %ld not registered)\n", expected_id);
 						return 2;
