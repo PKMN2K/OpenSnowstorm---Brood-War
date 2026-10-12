@@ -16665,7 +16665,8 @@ struct game_load_functions : state_functions {
 	setup_info_t setup_info;
 
 	unit_type_t* get_unit_type(UnitTypes id) const {
-		if ((size_t)id >= 228) error("invalid unit id %d", (size_t)id);
+		const unit_type_t* type = find_unit_type(game_st.unit_types, id);
+		if (!type) error("invalid unit id %d", (int)id);
 		return &game_st.unit_types.vec[(size_t)id];
 	}
 	const weapon_type_t* get_weapon_type(WeaponTypes id) const {
