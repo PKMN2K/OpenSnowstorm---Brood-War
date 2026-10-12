@@ -586,7 +586,15 @@ struct state_functions {
 			if (vis_hp_shields < max_vis_hp_shields) return 0;
 		}
 
-		int r = ground ? game_st.unit_ground_strength[u->unit_type->id] : game_st.unit_air_strength[u->unit_type->id];
+		const size_t strength_id = static_cast<size_t>(u->unit_type->id);
+		int r = 0;
+		if (strength_id < 228) {
+			r = ground ? game_st.unit_ground_strength[u->unit_type->id] : game_st.unit_air_strength[u->unit_type->id];
+		} else {
+			const size_t extended_index = strength_id - 228;
+			const auto& strengths = ground ? game_st.extended_unit_ground_strength : game_st.extended_unit_air_strength;
+			if (extended_index < strengths.size()) r = strengths[extended_index];
+		}
 		if (unit_is(u, UnitTypes::Terran_Bunker)) {
 			r = ground ? game_st.unit_ground_strength[UnitTypes::Terran_Marine] : game_st.unit_air_strength[UnitTypes::Terran_Marine];
 			r *= (int)unit_space_occupied(u);
@@ -17796,8 +17804,11 @@ struct game_load_functions : state_functions {
 	}
 
 	void calculate_unit_strengths() {
+		const size_t extended_count = game_st.unit_types.vec.size() > 228 ? game_st.unit_types.vec.size() - 228 : 0;
+		game_st.extended_unit_air_strength.resize(extended_count);
+		game_st.extended_unit_ground_strength.resize(extended_count);
 
-		for (int idx = 0; idx < 228; ++idx) {
+		for (size_t idx = 0; idx < game_st.unit_types.vec.size(); ++idx) {
 
 			const unit_type_t* unit_type = get_unit_type((UnitTypes)idx);
 			const unit_type_t* attacking_type = unit_type;
@@ -17819,8 +17830,13 @@ struct game_load_functions : state_functions {
 			if (air_strength == 1 && ground_strength > air_strength) air_strength = 0;
 			if (ground_strength == 1 && air_strength > ground_strength) ground_strength = 0;
 
-			game_st.unit_air_strength[(UnitTypes)idx] = air_strength;
-			game_st.unit_ground_strength[(UnitTypes)idx] = ground_strength;
+			if (idx < 228) {
+				game_st.unit_air_strength[(UnitTypes)idx] = air_strength;
+				game_st.unit_ground_strength[(UnitTypes)idx] = ground_strength;
+			} else {
+				game_st.extended_unit_air_strength[idx - 228] = air_strength;
+				game_st.extended_unit_ground_strength[idx - 228] = ground_strength;
+			}
 
 		}
 
