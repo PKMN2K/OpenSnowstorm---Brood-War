@@ -1525,6 +1525,7 @@ struct main_t {
 		bool selected_game_type_melee = false;
 
 		game_load_functions load_funcs(ui.st);
+		if (!load_funcs.stage_extended_unit_file_from_env()) error("failed to load OPENBW_EXTENDED_UNITS mod file");
 		load_funcs.load_map_file(map_file, [&]() {
 			auto is_melee_pickable = [&](int controller) {
 				return controller == player_t::controller_open || controller == player_t::controller_computer;
