@@ -1,4 +1,5 @@
-#include "data_types.h"
+#include "expanded_units.h"
+#include <sstream>
 
 #include <cstdio>
 
@@ -56,6 +57,25 @@ int main() {
         bwgame::find_unit_type(loaded, static_cast<bwgame::UnitTypes>(extension_id))->mineral_cost != 125)
         return fail("registered metadata");
     if (loaded.vec[vanilla_id].mineral_cost != 50) return fail("registration altered vanilla");
+
+    // Parse external records and apply to a cloned vanilla unit definition.
+    std::istringstream text_spec("300,0,125,25\\n301,300,175,50\\n");
+    bwgame::a_vector<bwgame::extended_unit_spec> specs;
+    if (!bwgame::parse_extended_unit_specs(text_spec, specs) || specs.size() != 2)
+        return fail("parse external specs");
+    bwgame::unit_types_t external;
+    external.vec.resize(300);
+    external.vec[0].id = bwgame::UnitTypes::Terran_Marine;
+    external.vec[0].mineral_cost = 50;
+    if (!bwgame::apply_extended_unit_specs(external, specs)) return fail("apply external specs");
+    if (external.vec.size() != 302 || external.vec[300].mineral_cost != 125 ||
+        external.vec[301].mineral_cost != 175 || external.vec[301].gas_cost != 50 ||
+        external.vec[0].mineral_cost != 50) return fail("external specs metadata");
+    std::istringstream invalid("300,0,-1,20\\n");
+    if (bwgame::parse_extended_unit_specs(invalid, specs)) return fail("reject negative field");
+    bwgame::a_vector<bwgame::extended_unit_spec> bad{{302, 0, 20, 0}};
+    if (bwgame::apply_extended_unit_specs(external, bad))
+        return fail("reject skipped ID");
 
     std::printf("test_unit_type_registry: PASS (storage only)\n");
     return 0;
