@@ -4245,6 +4245,20 @@ int main(int argc, char** argv) {
 						log("custom-unit smoke: FAIL (no instantiated unit with sprite for ID %ld)\n", expected_id);
 						return 2;
 					}
+					// Verify that the duplicate is independently defined, while the
+					// original Marine retains its vanilla mineral cost.
+					if (expected_id == 228) {
+						const auto* duplicate = bwgame::find_unit_type(
+							ui.st.game->unit_types, static_cast<bwgame::UnitTypes>(228));
+						const auto* marine = bwgame::find_unit_type(
+							ui.st.game->unit_types, bwgame::UnitTypes::Terran_Marine);
+						if (!duplicate || !marine || duplicate == marine ||
+							duplicate->mineral_cost != 125 || marine->mineral_cost != 50) {
+							log("custom-unit smoke: FAIL (Marine duplicate metadata)\n");
+							return 2;
+						}
+						log("custom-unit smoke: PASS (Marine duplicate cost 125; vanilla cost 50)\n");
+					}
 					log("custom-unit smoke: PASS (instantiated ID %ld with sprite)\n", expected_id);
 				}
 			}
