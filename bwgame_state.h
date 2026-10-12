@@ -119,6 +119,9 @@ struct game_state {
 
   type_indexed_array<int, UnitTypes> unit_air_strength;
   type_indexed_array<int, UnitTypes> unit_ground_strength;
+  // Strength values for IDs beyond the original 228-entry compatibility tables.
+  a_vector<int> extended_unit_air_strength;
+  a_vector<int> extended_unit_ground_strength;
 
   struct force_t {
     a_string name;
