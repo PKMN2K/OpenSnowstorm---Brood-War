@@ -18504,7 +18504,10 @@ struct game_load_functions : state_functions {
 
 				(void)id; (void)link; (void)valid_flags; (void)units_in_hangar; (void)flags; (void)related_unit_id;
 
-				if ((size_t)unit_type_id >= 228) error("UNIT: invalid unit type %d", (int)unit_type_id);
+				// Keep the CHK invalid-unit sentinel behavior, but allow map-placed
+				// extended IDs when their definitions were explicitly registered.
+				if (!is_invalid && !find_unit_type(game_st.unit_types, unit_type_id))
+					error("UNIT: invalid or unregistered unit type %d", (int)unit_type_id);
 				if ((size_t)owner >= 12) error("UNIT: invalid owner %d", owner);
 
 				const unit_type_t* unit_type = get_unit_type(unit_type_id);
