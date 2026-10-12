@@ -93,8 +93,6 @@ jobs:
   validate-replay:
     name: Validate replay (compatibility gate)
     runs-on: ubuntu-22.04
-    # Skip this job when deterministic fixtures are not yet committed.
-    if: ${{ hashFiles('maps/test.rep', 'maps/test.hashes') != '' }}
 
     steps:
       - name: Checkout
@@ -105,12 +103,25 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends cmake libsdl2-dev libsdl2-mixer-dev g++
 
+      - name: Check replay fixture presence
+        id: fixtures
+        shell: bash
+        run: |
+          if test -f maps/test.rep && test -f maps/test.hashes; then
+            echo 'available=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'Replay fixtures absent; skipping replay verification'
+            echo 'available=false' >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Configure & build
+        if: steps.fixtures.outputs.available == 'true'
         run: |
           cmake -B build -DCMAKE_BUILD_TYPE=Release
           cmake --build build --parallel $(nproc)
 
       - name: Run replay validation + hash verification
+        if: steps.fixtures.outputs.available == 'true'
         run: |
           ./build/gfxtest --validate-replay --replay maps/test.rep
           ./build/gfxtest --verify-hashes maps/test.hashes --replay maps/test.rep
