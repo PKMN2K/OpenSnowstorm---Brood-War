@@ -104,6 +104,19 @@ int main() {
         duplicate->id == marine_registry.vec[vanilla_id].id)
         return fail("Marine test inheritance");
     if (marine_registry.vec[vanilla_id].mineral_cost != 50) return fail("vanilla Marine modified");
+    // Map UNIT records and runtime spawning both require a registered ID.
+    // The first extension is exactly one past the original 228 entries.
+    if (!bwgame::find_unit_type(marine_registry, static_cast<bwgame::UnitTypes>(228)))
+        return fail("map-placeable ID 228 missing");
+    if (bwgame::find_unit_type(marine_registry, static_cast<bwgame::UnitTypes>(229)))
+        return fail("unregistered map unit accepted");
+    if (bwgame::find_unit_type(marine_registry, static_cast<bwgame::UnitTypes>(65535)))
+        return fail("invalid CHK sentinel accepted");
+    if (bwgame::find_unit_type(marine_registry, static_cast<bwgame::UnitTypes>(-1)))
+        return fail("negative spawn ID accepted");
+    if (duplicate->id != static_cast<bwgame::UnitTypes>(228))
+        return fail("custom Marine did not preserve independent ID");
+
 
     std::printf("test_unit_type_registry: PASS (storage only)\n");
     return 0;
