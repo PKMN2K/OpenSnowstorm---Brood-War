@@ -21,6 +21,15 @@ int main() {
     registry.vec[extension_id].id = static_cast<bwgame::UnitTypes>(extension_id);
     registry.vec[extension_id].mineral_cost = 75;
 
+    if (bwgame::find_unit_type(registry, static_cast<bwgame::UnitTypes>(extension_id)) != &registry.vec[extension_id])
+        return fail("runtime resolver extended ID");
+    if (bwgame::find_unit_type(registry, bwgame::UnitTypes::Terran_Marine) != &registry.vec[vanilla_id])
+        return fail("runtime resolver vanilla ID");
+    if (bwgame::find_unit_type(registry, static_cast<bwgame::UnitTypes>(extension_id + 1)) != nullptr)
+        return fail("runtime resolver out of range");
+    if (bwgame::find_unit_type(registry, static_cast<bwgame::UnitTypes>(-1)) != nullptr)
+        return fail("runtime resolver negative ID");
+
     if (registry.vec.size() != extension_id + 1) return fail("capacity");
     if (static_cast<size_t>(registry.vec[extension_id].id) != extension_id)
         return fail("extended ID");
