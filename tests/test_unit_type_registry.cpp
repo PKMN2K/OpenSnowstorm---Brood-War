@@ -73,7 +73,7 @@ int main() {
         external.vec[0].mineral_cost != 50) return fail("external specs metadata");
     std::istringstream invalid("300,0,-1,20\n");
     if (bwgame::parse_extended_unit_specs(invalid, specs)) return fail("reject negative field");
-    bwgame::a_vector<bwgame::extended_unit_spec> bad{{302, 0, 20, 0}};
+    bwgame::a_vector<bwgame::extended_unit_spec> bad{{303, 0, 20, 0}};
     if (bwgame::apply_extended_unit_specs(external, bad))
         return fail("reject skipped ID");
 
