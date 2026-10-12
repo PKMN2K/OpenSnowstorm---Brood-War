@@ -13529,7 +13529,10 @@ struct state_functions {
 	}
 
 	unit_t* create_unit(UnitTypes unit_type_id, xy pos, int owner) {
-		if ((size_t)unit_type_id >= 228) error("attempt to create unit with invalid id %d", unit_type_id);
+		// Permit custom IDs only when registered in the loaded unit registry.
+		// The pointer overload handles sprite initialization from inherited metadata.
+		if (!find_unit_type(game_st.unit_types, unit_type_id))
+			error("attempt to create unit with invalid id %d", (int)unit_type_id);
 		return create_unit(get_unit_type(unit_type_id), pos, owner);
 	}
 
