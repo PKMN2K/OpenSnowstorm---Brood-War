@@ -71,7 +71,13 @@ add_test(NAME DeterminismCheck COMMAND ${CMAKE_COMMAND} -E chdir ${CMAKE_SOURCE_
 if(OPENSNOWSTORM_BUILD_UI)
     if(NOT EMSCRIPTEN)
         find_package(SDL2 REQUIRED)
-        find_package(SDL2_mixer REQUIRED)
+        # Ubuntu's libsdl2-mixer-dev may provide pkg-config metadata without
+        # the SDL2_mixer CMake config package.
+        find_package(SDL2_mixer QUIET CONFIG)
+        if(NOT TARGET SDL2_mixer::SDL2_mixer AND NOT SDL2_mixer_FOUND)
+            find_package(PkgConfig REQUIRED)
+            pkg_check_modules(SDL2_MIXER REQUIRED IMPORTED_TARGET SDL2_mixer)
+        endif()
 
         # Normalize SDL2 link targets across config-package versions.
         # Modern SDL2 / SDL2_mixer config packages only export the imported
@@ -86,6 +92,8 @@ if(OPENSNOWSTORM_BUILD_UI)
         endif()
         if(TARGET SDL2_mixer::SDL2_mixer)
             set(OPENSNOWSTORM_SDL2_MIXER_LIB SDL2_mixer::SDL2_mixer)
+        elseif(TARGET PkgConfig::SDL2_MIXER)
+            set(OPENSNOWSTORM_SDL2_MIXER_LIB PkgConfig::SDL2_MIXER)
         else()
             set(OPENSNOWSTORM_SDL2_MIXER_LIB ${SDL2_MIXER_LIBRARIES})
         endif()
