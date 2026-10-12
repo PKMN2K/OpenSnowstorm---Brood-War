@@ -1094,6 +1094,7 @@ struct Game_impl {
 
 		} else {
 			bwgame::game_load_functions load_funcs(st);
+			if (!load_funcs.stage_extended_unit_file_from_env()) error("failed to load OPENBW_EXTENDED_UNITS mod file");
 
 			load_funcs.load_map_file(filename, [&]() {
 				bwgame::static_vector<size_t, 12> available_slots;
