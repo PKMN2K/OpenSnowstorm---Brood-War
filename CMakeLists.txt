@@ -157,3 +157,9 @@ add_executable(test_client_settings tests/test_client_settings.cpp)
 target_include_directories(test_client_settings PRIVATE ${CMAKE_SOURCE_DIR})
 opensnowstorm_apply_common_compile_options(test_client_settings)
 add_test(NAME ClientSettings COMMAND test_client_settings)
+
+# Registry storage regression: does not require game assets.
+add_executable(test_unit_type_registry tests/test_unit_type_registry.cpp)
+target_include_directories(test_unit_type_registry PRIVATE ${CMAKE_SOURCE_DIR})
+opensnowstorm_apply_common_compile_options(test_unit_type_registry)
+add_test(NAME UnitTypeRegistry COMMAND test_unit_type_registry)
