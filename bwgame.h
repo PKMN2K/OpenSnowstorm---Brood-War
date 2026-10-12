@@ -16664,6 +16664,11 @@ struct game_load_functions : state_functions {
 	};
 	setup_info_t setup_info;
 
+	// Optional extra unit definitions staged by the caller before reset().
+	// Registered after vanilla DAT loading, before cross-table pointer fixups.
+	// This does not load a mod file or expose new production buttons.
+	a_vector<unit_type_t> staged_unit_types;
+
 	unit_type_t* get_unit_type(UnitTypes id) const {
 		const unit_type_t* type = find_unit_type(game_st.unit_types, id);
 		if (!type) error("invalid unit id %d", (int)id);
@@ -16689,6 +16694,10 @@ struct game_load_functions : state_functions {
 	void reset() {
 
 		game_st.unit_types = data_loading::load_units_dat(global_st.units_dat);
+		for (auto& definition : staged_unit_types) {
+			if (!append_extended_unit_type(game_st.unit_types, definition.id, definition))
+				error("invalid or noncontiguous extended unit id %d", (int)definition.id);
+		}
 		game_st.weapon_types = data_loading::load_weapons_dat(global_st.weapons_dat);
 		game_st.upgrade_types = data_loading::load_upgrades_dat(global_st.upgrades_dat);
 		game_st.tech_types = data_loading::load_techdata_dat(global_st.techdata_dat);
