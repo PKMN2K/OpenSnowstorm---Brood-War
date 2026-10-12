@@ -180,6 +180,18 @@ inline const unit_type_t* find_unit_type(const unit_types_t& types, UnitTypes id
 }
 
 
+// Append a new unit definition without replacing an existing registry entry.
+// Call only during registry construction, before any pointers into vec are kept:
+// vector growth may invalidate such pointers. IDs must be contiguous.
+inline bool append_extended_unit_type(unit_types_t& types, UnitTypes id, unit_type_t definition) {
+    const int index = static_cast<int>(id);
+    if (index < 0 || static_cast<size_t>(index) != types.vec.size()) return false;
+    definition.id = id;
+    types.vec.push_back(definition);
+    return true;
+}
+
+
 struct weapon_type_t {
 	enum {
 		bullet_type_fly,
