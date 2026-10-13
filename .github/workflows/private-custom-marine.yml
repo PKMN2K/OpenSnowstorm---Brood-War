@@ -1,0 +1,74 @@
+name: Private Brood War custom-unit map test
+
+on:
+  workflow_dispatch:
+    inputs:
+      assets_repository:
+        description: 'Private repository with your own Brood War MPQs and test map (owner/repo)'
+        required: true
+        type: string
+      release_tag:
+        description: 'Release tag containing StarDat.mpq, BrooDat.mpq, Patch_rt.mpq, and custom_marine.scx'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  custom-marine-integration:
+    name: Test Marine ID 228 using private game data
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout engine
+        uses: actions/checkout@v4
+
+      - name: Validate private asset access
+        env:
+          ASSETS_TOKEN: ${{ secrets.OPENSNOWSTORM_ASSETS_TOKEN }}
+        run: |
+          if test -z "$ASSETS_TOKEN"; then
+            echo "::error::Set the OPENSNOWSTORM_ASSETS_TOKEN repository secret to a fine-grained token with Contents: Read access to the private assets repository."
+            exit 1
+          fi
+
+      - name: Download game data securely from private release
+        env:
+          GH_TOKEN: ${{ secrets.OPENSNOWSTORM_ASSETS_TOKEN }}
+          ASSETS_REPOSITORY: ${{ inputs.assets_repository }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/starcraft-assets"
+          gh release download "$RELEASE_TAG" --repo "$ASSETS_REPOSITORY" --dir "$RUNNER_TEMP/starcraft-assets"
+          for file in StarDat.mpq BrooDat.mpq Patch_rt.mpq custom_marine.scx; do
+            if ! test -s "$RUNNER_TEMP/starcraft-assets/$file"; then
+              echo "::error::Missing or empty private release asset: $file"
+              exit 1
+            fi
+          done
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends cmake g++ libsdl2-dev libsdl2-mixer-dev
+
+      - name: Build graphical engine executable
+        run: |
+          cmake -S . -B build-private -DCMAKE_BUILD_TYPE=Release -DOPENSNOWSTORM_BUILD_UI=ON -DOPENSNOWSTORM_BUILD_BWAPI=OFF
+          cmake --build build-private --target gfxtest --parallel 2
+
+      - name: Verify private custom Marine map
+        env:
+          DATA_DIR: ${{ runner.temp }}/starcraft-assets
+        run: |
+          set -euo pipefail
+          # Only output test results; do not print, commit, cache or upload proprietary files.
+          bash scripts/test_custom_marine.sh "$DATA_DIR/custom_marine.scx" "$DATA_DIR" ./build-private/gfxtest
+
+      - name: Delete private game data
+        if: always()
+        env:
+          DATA_DIR: ${{ runner.temp }}/starcraft-assets
+        run: rm -rf -- "$DATA_DIR"
